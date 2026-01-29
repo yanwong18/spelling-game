@@ -3,169 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scarlett's Game - Phonics Fun!</title>
-    <!-- Celebration Library -->
+    <title>Scarlett's Game - Pure Phonics</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <!-- Fun Cartoon Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Short+Stack&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --blue: #3498db; 
-            --green: #2ecc71; 
-            --red: #e74c3c; 
-            --yellow: #f1c40f; 
-            --purple: #9b59b6;
-        }
-        
-        body { 
-            font-family: 'Short Stack', cursive; 
-            background: #fdf2f8; /* Soft pink background */
-            text-align: center; 
-            margin: 0; 
-            padding: 20px; 
-        }
-        
-        #game-card {
-            background: white; 
-            max-width: 600px; 
-            margin: auto; 
-            border: 10px solid var(--purple);
-            border-radius: 50px; 
-            padding: 25px; 
-            box-shadow: 0 15px 0 #dcc6e0;
-            position: relative;
-        }
-
-        .main-title {
-            font-family: 'Fredoka One', cursive;
-            color: var(--purple);
-            font-size: 40px;
-            margin: 0 0 10px 0;
-            text-shadow: 2px 2px #eee;
-        }
-
-        /* Character Animation */
-        #monster { font-size: 80px; transition: 0.3s; display: inline-block; margin: 10px; cursor: pointer; }
+        :root { --purple: #9b59b6; --pink: #ff78ae; --blue: #3498db; --green: #2ecc71; }
+        body { font-family: 'Short Stack', cursive; background: #fff5f8; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        #game-card { background: white; width: 100%; max-width: 650px; border: 10px solid var(--purple); border-radius: 50px; padding: 25px; box-shadow: 0 15px 0 #dcc6e0; text-align: center; }
+        .main-title { font-family: 'Fredoka One', cursive; color: var(--purple); font-size: 38px; margin: 0; }
+        #monster { font-size: 80px; margin: 10px; transition: 0.3s; display: inline-block; cursor: pointer; }
         .dance { animation: dance 0.5s infinite; }
-        @keyframes dance { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(10deg); } }
+        @keyframes dance { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
         .shake { animation: shake 0.2s 3; }
-        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(10px); } 75% { transform: translateX(-10px); } }
-
-        .pic-box { 
-            font-size: 100px; 
-            height: 140px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            background: #fff9f0; 
-            border-radius: 30px; 
-            border: 4px dashed #ffd3b6; 
-            margin: 10px auto; 
-            width: 160px; 
-        }
-
-        #word-hint { 
-            font-family: 'Fredoka One', cursive; 
-            font-size: 38px; 
-            color: var(--blue); 
-            margin: 10px 0;
-            letter-spacing: 1px;
-        }
-        
-        #feedback { font-weight: bold; font-size: 22px; height: 35px; margin: 10px; color: var(--red); }
-
-        .btn { 
-            padding: 15px 30px; 
-            font-size: 22px; 
-            border-radius: 50px; 
-            border: none; 
-            cursor: pointer; 
-            font-family: 'Fredoka One'; 
-            color: white; 
-            margin: 5px; 
-            transition: 0.2s; 
-        }
-        .btn-listen { background: var(--red); box-shadow: 0 6px 0 #c0392b; }
-        .btn-next { background: var(--green); box-shadow: 0 6px 0 #27ae60; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(10px); } 75% { transform: translateX(-10px); } }
+        .pic-box { font-size: 100px; background: #fff; width: 160px; height: 160px; margin: 10px auto; border-radius: 30px; display: flex; align-items: center; justify-content: center; border: 4px dashed var(--pink); }
+        #word-label { font-family: 'Fredoka One', cursive; font-size: 40px; color: var(--blue); margin: 5px 0; letter-spacing: 2px; }
+        .btn { padding: 15px 25px; font-size: 20px; border-radius: 50px; border: none; cursor: pointer; font-family: 'Fredoka One'; color: white; transition: 0.2s; margin: 5px; }
+        .btn-blend { background: var(--pink); box-shadow: 0 6px 0 #d64d8a; }
+        .btn-next { background: var(--green); box-shadow: 0 6px 0 #27ae60; margin-top: 20px; }
         .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #666; }
+        
+        /* Phonics Tiles with Sound Buttons */
+        .tile-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin: 20px 0; }
+        .tile-wrapper { display: flex; flex-direction: column; align-items: center; }
+        .tile { background: white; border: 4px solid var(--blue); padding: 10px 20px; font-size: 32px; border-radius: 15px; cursor: pointer; box-shadow: 0 5px 0 var(--blue); position: relative; }
+        .sound-button { width: 12px; height: 12px; background: #bdc3c7; border-radius: 50%; margin-top: 8px; }
+        .sound-bar { width: 40px; height: 8px; background: #bdc3c7; border-radius: 10px; margin-top: 8px; }
 
-        .tile { 
-            display: inline-block; 
-            background: white; 
-            border: 4px solid var(--blue); 
-            padding: 15px 22px; 
-            font-size: 30px; 
-            border-radius: 20px; 
-            cursor: pointer; 
-            margin: 6px; 
-            box-shadow: 0 5px 0 var(--blue); 
-        }
-        .tile:hover { background: #e1f5fe; }
-
-        .drop-zone { 
-            min-height: 90px; 
-            background: #f0f0f0; 
-            border-radius: 25px; 
-            margin: 20px 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            gap: 10px; 
-            border: 3px inset #ddd;
-        }
-
-        input { 
-            font-size: 32px; 
-            width: 85%; 
-            padding: 12px; 
-            border: 5px solid var(--yellow); 
-            border-radius: 20px; 
-            text-align: center; 
-            font-family: 'Short Stack', cursive;
-            outline: none;
-        }
-
+        .drop-zone { min-height: 100px; background: #f9f9f9; border-radius: 25px; margin: 20px 0; display: flex; justify-content: center; align-items: center; gap: 10px; border: 3px inset #ddd; }
+        input { font-size: 32px; width: 85%; padding: 12px; border: 5px solid #feca57; border-radius: 20px; text-align: center; outline: none; }
         .section { display: none; }
         .active { display: block; }
-
-        .progress-dots { font-size: 14px; color: #888; margin-bottom: 5px; }
+        #feedback { font-weight: bold; font-size: 20px; height: 30px; margin: 10px; }
     </style>
 </head>
 <body>
-
 <div id="game-card">
-    <div class="progress-dots">Scarlett's Wardrobe: <span id="counter">1</span> / 12</div>
-    <h1 class="main-title">Scarlett's Game 👗</h1>
-    
-    <div id="monster" onclick="playWord()">👾</div>
+    <h1 class="main-title">Scarlett's Game</h1>
+    <div id="monster">👾</div>
     <div class="pic-box" id="pic-display"></div>
-    <div id="word-hint">a skirt</div>
+    <div id="word-label"></div>
     <div id="feedback"></div>
 
-    <!-- PART 1: LEARN -->
+    <!-- PART 1 -->
     <div id="part1" class="section active">
-        <button class="btn btn-listen" onclick="playWord()">Listen 🔊</button>
-        <div id="p1-tiles"></div>
-        <button class="btn btn-next" onclick="toStep(2)">I can build it! ➔</button>
+        <button class="btn btn-blend" onclick="blendSequence()">Press to Blend 🗣️</button>
+        <div id="p1-tiles" class="tile-container"></div>
+        <button class="btn btn-next" onclick="toStep(2)">Ready to Spell! ➔</button>
     </div>
 
-    <!-- PART 2: BUILD -->
+    <!-- PART 2 -->
     <div id="part2" class="section">
-        <button class="btn btn-listen" onclick="playWord()">Listen 🔊</button>
+        <p>Put the sounds in order:</p>
         <div class="drop-zone" id="drop-zone"></div>
-        <div id="p2-bank"></div>
-        <button onclick="resetStep2()" style="border:none; color:gray; cursor:pointer; background:none; font-size:16px;">Try Again ↺</button>
+        <div id="p2-bank" class="tile-container"></div>
+        <button onclick="resetStep2()" style="border:none; color:gray; cursor:pointer; background:none;">Reset ↺</button>
     </div>
 
-    <!-- PART 3: TYPE -->
+    <!-- PART 3 -->
     <div id="part3" class="section">
-        <p style="font-size: 20px;">Can you type it, Scarlett?</p>
-        <input type="text" id="typing-box" autocomplete="off" placeholder="Type here...">
+        <p>Type the whole word:</p>
+        <input type="text" id="typing-box" autocomplete="off">
         <br>
-        <button class="btn btn-next" onclick="checkTyping()">Check My Work! ✅</button>
+        <button class="btn btn-next" onclick="checkTyping()">Check My Spelling ✅</button>
     </div>
 </div>
-
 <script src="script.js"></script>
 </body>
 </html>
