@@ -13,141 +13,168 @@ const rawData = [
     { word: "green", phonemes: ["g", "r", "ee", "n"], pic: "💚" }
 ];
 
-// PURE PHONICS MAPPING (Tricking TTS to say pure sounds)
-const pureSounds = {
-    "a": "ah", "b": "b", "c": "k", "d": "d", "e": "eh", 
-    "f": "ffff", "g": "g", "h": "h", "i": "ih", "j": "j", 
-    "k": "k", "l": "lll", "m": "mmmm", "n": "nnnn", "o": "off", 
-    "p": "p", "qu": "kw", "r": "rrr", "s": "sssss", "t": "t", 
-    "u": "uh", "v": "vvvv", "w": "w", "x": "ks", "y": "yuh", "z": "zzzz",
-    "sh": "shhhhh", "ch": "ch", "th": "th", "ng": "ng", 
-    "ai": "ay", "ee": "eee", "igh": "eye", "oa": "oh", "oo": "ooo",
-    "ar": "arr", "or": "orr", "ur": "er", "ow": "ow", "oi": "oy",
-    "ear": "eer", "air": "air", "ure": "your", "er": "er",
-    "ir": "er", "ss": "sssss", "ll": "lll", "ea": "eee", "ue": "ooo",
-    "ou": "ow", "oe": "oh"
+const phonicsMap = {
+    "a": "ah", "b": "b", "c": "k", "d": "d", "e": "eh", "f": "ffff", "g": "g", "h": "h", "i": "ih",
+    "j": "j", "k": "k", "l": "lll", "m": "mmmm", "n": "nnnn", "o": "off", "p": "p", "r": "rrr",
+    "s": "sssss", "t": "t", "u": "uh", "v": "vvvv", "w": "w", "x": "ks", "y": "yuh", "z": "zzzz",
+    "sh": "shhhhh", "ch": "ch", "th": "th", "ee": "eee", "ir": "er", "ur": "er", "ow": "oh",
+    "ll": "lll", "ss": "sssss", "ea": "eee", "or": "orr", "ou": "ow", "ue": "ooo", "oe": "oh"
 };
 
 let wordList = [...rawData].sort(() => Math.random() - 0.5);
 let currentIdx = 0;
 let userPhonemes = [];
+let scoreHistory = []; // Tracks Scarlett's answers
 
-function speak(t, isPhoneme = false, rate = 0.7) {
+function speak(text, isPhoneme = false, rate = 0.7) {
     return new Promise((resolve) => {
-        const m = new SpeechSynthesisUtterance();
-        let textToSay = t;
-        if (isPhoneme && pureSounds[t.toLowerCase()]) {
-            textToSay = pureSounds[t.toLowerCase()];
-        }
-        m.text = textToSay;
-        m.lang = 'en-GB';
-        m.rate = rate;
-        m.onend = resolve;
-        window.speechSynthesis.speak(m);
+        const msg = new SpeechSynthesisUtterance();
+        msg.text = (isPhoneme && phonicsMap[text.toLowerCase()]) ? phonicsMap[text.toLowerCase()] : text;
+        msg.lang = 'en-GB';
+        msg.rate = rate;
+        msg.onend = resolve;
+        window.speechSynthesis.speak(msg);
     });
 }
 
-// Blending Engine
-async function blendSequence() {
+async function blendWord() {
     const item = wordList[currentIdx];
-    for (let p of item.phonemes) {
-        await speak(p, true, 0.5);
-    }
+    for (let p of item.phonemes) { await speak(p, true, 0.5); }
     await speak(item.word, false, 0.8);
+}
+
+function playWholeWord() { speak(wordList[currentIdx].word); }
+
+function celebrate() {
+    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+    document.getElementById('princess-char').classList.add('dance');
+    setTimeout(() => document.getElementById('princess-char').classList.remove('dance'), 2000);
 }
 
 function loadWord() {
     const item = wordList[currentIdx];
+    document.getElementById('count-num').innerText = currentIdx + 1;
     document.getElementById('pic-display').innerText = item.pic;
     document.getElementById('word-label').innerText = item.word;
-    document.getElementById('word-label').style.display = "block";
-    document.getElementById('feedback').innerText = "";
+    document.getElementById('word-label').style.visibility = "visible";
+    document.getElementById('feedback-msg').innerText = "";
 
     const p1 = document.getElementById('p1-tiles');
     p1.innerHTML = '';
     item.phonemes.forEach(p => {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'tile-wrapper';
-        
-        const tile = document.createElement('div');
-        tile.className = 'tile';
-        tile.innerText = p;
-        tile.onclick = () => speak(p, true);
-        
-        const button = document.createElement('div');
-        // If phoneme is 2+ letters, use a "bar", else a "dot"
-        button.className = p.length > 1 ? 'sound-bar' : 'sound-button';
-        
-        wrapper.appendChild(tile);
-        wrapper.appendChild(button);
-        p1.appendChild(wrapper);
+        const wrap = document.createElement('div');
+        wrap.className = 'tile-wrapper';
+        const t = document.createElement('div');
+        t.className = 'tile'; t.innerText = p;
+        t.onclick = () => speak(p, true);
+        const btn = document.createElement('div');
+        btn.className = p.length > 1 ? 'sound-dash' : 'sound-dot';
+        wrap.appendChild(t); wrap.appendChild(btn);
+        p1.appendChild(wrap);
     });
-    resetStep2();
+    resetPart2();
 }
 
-function toStep(n) {
-    if (n > 1) document.getElementById('word-label').style.display = "none";
+function goToStep(n) {
+    document.getElementById('word-label').style.visibility = (n === 1) ? "visible" : "hidden";
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
     document.getElementById('part' + n).classList.add('active');
-    if(n === 3) document.getElementById('typing-box').focus();
+    if(n === 3) document.getElementById('typing-input').focus();
 }
 
-function resetStep2() {
+function resetPart2() {
     userPhonemes = [];
     document.getElementById('drop-zone').innerHTML = '';
     const bank = document.getElementById('p2-bank');
     bank.innerHTML = '';
     let scrambled = [...wordList[currentIdx].phonemes].sort(() => Math.random() - 0.5);
     scrambled.forEach(p => {
-        const d = document.createElement('div');
-        d.className = 'tile'; d.innerText = p;
-        d.onclick = () => {
-            speak(p, true); userPhonemes.push(p); d.style.visibility = 'hidden';
-            const t = document.createElement('div'); t.className = 'tile'; t.innerText = p;
-            document.getElementById('drop-zone').appendChild(t);
+        const t = document.createElement('div');
+        t.className = 'tile'; t.innerText = p;
+        t.onclick = () => {
+            speak(p, true); userPhonemes.push(p); t.style.visibility = 'hidden';
+            const drop = document.createElement('div'); drop.className = 'tile'; drop.innerText = p;
+            document.getElementById('drop-zone').appendChild(drop);
             if(userPhonemes.length === wordList[currentIdx].phonemes.length) {
                 if(userPhonemes.join('') === wordList[currentIdx].phonemes.join('')) {
-                    celebrate(); setTimeout(() => toStep(3), 1000);
+                    celebrate(); setTimeout(() => goToStep(3), 1000);
                 } else {
-                    speak("Try again!");
-                    document.getElementById('monster').classList.add('shake');
-                    setTimeout(() => { document.getElementById('monster').classList.remove('shake'); resetStep2(); }, 500);
+                    speak("Try again Scarlett!");
+                    document.getElementById('princess-char').classList.add('shake');
+                    setTimeout(() => { document.getElementById('princess-char').classList.remove('shake'); resetPart2(); }, 500);
                 }
             }
         };
-        bank.appendChild(d);
+        bank.appendChild(t);
     });
 }
 
-function celebrate() {
-    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-    document.getElementById('monster').classList.add('dance');
-    setTimeout(() => document.getElementById('monster').classList.remove('dance'), 2000);
-}
-
-function checkTyping() {
-    const val = document.getElementById('typing-box').value.toLowerCase().trim();
+function checkFinalTyping() {
+    const val = document.getElementById('typing-input').value.toLowerCase().trim();
     const correct = wordList[currentIdx].word;
+
     if (val === correct) {
-        celebrate();
-        speak("Brilliant Scarlett!");
+        // If they got it right, log it as a success
+        if (!scoreHistory[currentIdx]) scoreHistory[currentIdx] = { word: correct, user: val, status: '✅' };
+        
+        celebrate(); speak("Brilliant!");
         currentIdx++;
         setTimeout(() => {
             if (currentIdx < wordList.length) {
-                document.getElementById('typing-box').value = '';
-                loadWord(); toStep(1);
+                document.getElementById('typing-input').value = '';
+                loadWord(); goToStep(1);
             } else {
-                document.getElementById('game-card').innerHTML = "<h1>🏆 Winner!</h1><p>Scarlett, you finished!</p>";
+                showResults();
             }
-        }, 2000);
+        }, 1500);
     } else {
-        document.getElementById('monster').classList.add('shake');
-        let nextChar = correct[val.length] || correct[0];
-        speak(`Listen for the sound ${nextChar}`, true);
+        // Log the mistake (only the first mistake is logged for the report)
+        if (!scoreHistory[currentIdx]) {
+            scoreHistory[currentIdx] = { word: correct, user: val || "(blank)", status: '❌' };
+        }
+        document.getElementById('princess-char').classList.add('shake');
+        setTimeout(() => document.getElementById('princess-char').classList.remove('shake'), 500);
+        speak(`Look for the sound ${correct[val.length] || correct[0]}`);
     }
 }
 
-window.onload = () => {
-    loadWord();
-    setTimeout(() => speak("Hi Scarlett! Let's say the sounds."), 500);
-};
+function showResults() {
+    document.getElementById('game-ui').style.display = 'none';
+    const resultPage = document.getElementById('result-page');
+    resultPage.classList.add('active');
+    
+    const list = document.getElementById('history-list');
+    list.innerHTML = '';
+    
+    scoreHistory.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'result-row';
+        
+        let displayUser = item.user;
+        // Logic to show exactly where the mistake was
+        if(item.status === '❌') {
+            let highlighted = "";
+            for(let i=0; i < item.word.length; i++) {
+                if(item.user[i] !== item.word[i]) {
+                    highlighted += `<span class="highlight">${item.user[i] || "_"}</span>`;
+                    highlighted += item.user.substring(i+1);
+                    break;
+                }
+                highlighted += item.user[i];
+            }
+            displayUser = highlighted;
+        }
+
+        row.innerHTML = `
+            <span>${item.status} <strong>${item.word}</strong></span>
+            <span>
+                ${item.status === '❌' ? `<span class="wrong-text">${displayUser}</span>` : ''}
+                <span class="correct-text">${item.word}</span>
+            </span>
+        `;
+        list.appendChild(row);
+    });
+    speak("Scarlett, you finished! Look at your royal report.");
+}
+
+window.onload = loadWord;
