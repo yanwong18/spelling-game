@@ -13,37 +13,41 @@ const rawData = [
     { word: "green", phonemes: ["g", "r", "ee", "n"], pic: "💚" }
 ];
 
+// Mapping pure sounds for ResponsiveVoice
 const phonicsMap = {
-    "a": "ah", "b": "b", "c": "k", "d": "d", "e": "eh", "f": "ffff", "g": "g", "h": "h", "i": "ih",
-    "j": "j", "k": "k", "l": "lll", "m": "mmmm", "n": "nnnn", "o": "off", "p": "p", "r": "rrr",
-    "s": "sssss", "t": "t", "u": "uh", "v": "vvvv", "w": "w", "x": "ks", "y": "yuh", "z": "zzzz",
-    "sh": "shhhhh", "ch": "ch", "th": "th", "ee": "eee", "ir": "er", "ur": "er", "ow": "oh",
+    "a": "ah", "b": "buh", "c": "k", "d": "duh", "e": "eh", "f": "ffff", "g": "guh", "h": "huh", "i": "ih",
+    "j": "juh", "k": "kuh", "l": "lll", "m": "mmmm", "n": "nnnn", "o": "off", "p": "puh", "r": "rrr",
+    "s": "sssss", "t": "t", "u": "uh", "v": "vvvv", "w": "wuh", "x": "ks", "y": "yuh", "z": "zzzz",
+    "sh": "shhhhh", "ch": "chuh", "th": "thhh", "ee": "eee", "ir": "er", "ur": "er", "ow": "oh",
     "ll": "lll", "ss": "sssss", "ea": "eee", "or": "orr", "ou": "ow", "ue": "ooo", "oe": "oh"
 };
 
 let wordList = [...rawData].sort(() => Math.random() - 0.5);
 let currentIdx = 0;
 let userPhonemes = [];
-let scoreHistory = []; // Tracks Scarlett's answers
+let gamePhase = 1; // 1: Build, 2: Type
+let buildHistory = [];
+let typingHistory = [];
 
-function speak(text, isPhoneme = false, rate = 0.7) {
-    return new Promise((resolve) => {
-        const msg = new SpeechSynthesisUtterance();
-        msg.text = (isPhoneme && phonicsMap[text.toLowerCase()]) ? phonicsMap[text.toLowerCase()] : text;
-        msg.lang = 'en-GB';
-        msg.rate = rate;
-        msg.onend = resolve;
-        window.speechSynthesis.speak(msg);
-    });
-}
-
-async function blendWord() {
-    const item = wordList[currentIdx];
-    for (let p of item.phonemes) { await speak(p, true, 0.5); }
-    await speak(item.word, false, 0.8);
+function speak(text, isPhoneme = false) {
+    let sound = text;
+    if (isPhoneme && phonicsMap[text.toLowerCase()]) {
+        sound = phonicsMap[text.toLowerCase()];
+    }
+    // Using ResponsiveVoice UK English Female
+    responsiveVoice.speak(sound, "UK English Female", {rate: 0.8, pitch: 1.1});
 }
 
 function playWholeWord() { speak(wordList[currentIdx].word); }
+
+async function blendWord() {
+    const item = wordList[currentIdx];
+    for (let p of item.phonemes) {
+        speak(p, true);
+        await new Promise(r => setTimeout(r, 800));
+    }
+    speak(item.word);
+}
 
 function celebrate() {
     confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
@@ -55,31 +59,35 @@ function loadWord() {
     const item = wordList[currentIdx];
     document.getElementById('count-num').innerText = currentIdx + 1;
     document.getElementById('pic-display').innerText = item.pic;
-    document.getElementById('word-label').innerText = item.word;
-    document.getElementById('word-label').style.visibility = "visible";
-    document.getElementById('feedback-msg').innerText = "";
-
-    const p1 = document.getElementById('p1-tiles');
-    p1.innerHTML = '';
-    item.phonemes.forEach(p => {
-        const wrap = document.createElement('div');
-        wrap.className = 'tile-wrapper';
-        const t = document.createElement('div');
-        t.className = 'tile'; t.innerText = p;
-        t.onclick = () => speak(p, true);
-        const btn = document.createElement('div');
-        btn.className = p.length > 1 ? 'sound-dash' : 'sound-dot';
-        wrap.appendChild(t); wrap.appendChild(btn);
-        p1.appendChild(wrap);
-    });
-    resetPart2();
+    
+    if (gamePhase === 1) {
+        document.getElementById('step-indicator').innerText = "Part 1: Learn";
+        document.getElementById('word-label').innerText = item.word;
+        document.getElementById('word-label').style.visibility = "visible";
+        showSection('part1');
+        
+        const p1Tiles = document.getElementById('p1-tiles');
+        p1Tiles.innerHTML = '';
+        item.phonemes.forEach(p => {
+            const wrap = document.createElement('div'); wrap.className = 'tile-wrapper';
+            const t = document.createElement('div'); t.className = 'tile'; t.innerText = p;
+            t.onclick = () => speak(p, true);
+            const btn = document.createElement('div'); btn.className = p.length > 1 ? 'sound-dash' : 'sound-dot';
+            wrap.appendChild(t); wrap.appendChild(btn);
+            p1Tiles.appendChild(wrap);
+        });
+    } else {
+        document.getElementById('step-indicator').innerText = "Step 3: Typing Challenge";
+        document.getElementById('word-label').style.visibility = "hidden";
+        showSection('part3');
+    }
 }
 
-function goToStep(n) {
-    document.getElementById('word-label').style.visibility = (n === 1) ? "visible" : "hidden";
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.getElementById('part' + n).classList.add('active');
-    if(n === 3) document.getElementById('typing-input').focus();
+function goToPart2() {
+    document.getElementById('step-indicator').innerText = "Part 2: Build it!";
+    document.getElementById('word-label').style.visibility = "hidden";
+    showSection('part2');
+    resetPart2();
 }
 
 function resetPart2() {
@@ -89,92 +97,97 @@ function resetPart2() {
     bank.innerHTML = '';
     let scrambled = [...wordList[currentIdx].phonemes].sort(() => Math.random() - 0.5);
     scrambled.forEach(p => {
-        const t = document.createElement('div');
-        t.className = 'tile'; t.innerText = p;
+        const t = document.createElement('div'); t.className = 'tile'; t.innerText = p;
         t.onclick = () => {
             speak(p, true); userPhonemes.push(p); t.style.visibility = 'hidden';
             const drop = document.createElement('div'); drop.className = 'tile'; drop.innerText = p;
             document.getElementById('drop-zone').appendChild(drop);
-            if(userPhonemes.length === wordList[currentIdx].phonemes.length) {
-                if(userPhonemes.join('') === wordList[currentIdx].phonemes.join('')) {
-                    celebrate(); setTimeout(() => goToStep(3), 1000);
-                } else {
-                    speak("Try again Scarlett!");
-                    document.getElementById('princess-char').classList.add('shake');
-                    setTimeout(() => { document.getElementById('princess-char').classList.remove('shake'); resetPart2(); }, 500);
-                }
+            if (userPhonemes.length === wordList[currentIdx].phonemes.length) {
+                checkBuild();
             }
         };
         bank.appendChild(t);
     });
 }
 
-function checkFinalTyping() {
-    const val = document.getElementById('typing-input').value.toLowerCase().trim();
-    const correct = wordList[currentIdx].word;
-
-    if (val === correct) {
-        // If they got it right, log it as a success
-        if (!scoreHistory[currentIdx]) scoreHistory[currentIdx] = { word: correct, user: val, status: '✅' };
-        
-        celebrate(); speak("Brilliant!");
+function checkBuild() {
+    const correct = wordList[currentIdx].phonemes.join('');
+    const user = userPhonemes.join('');
+    if (user === correct) {
+        celebrate();
+        buildHistory.push({word: wordList[currentIdx].word, status: '✅'});
         currentIdx++;
         setTimeout(() => {
-            if (currentIdx < wordList.length) {
-                document.getElementById('typing-input').value = '';
-                loadWord(); goToStep(1);
-            } else {
-                showResults();
-            }
+            if (currentIdx < wordList.length) loadWord();
+            else showReport(1);
         }, 1500);
     } else {
-        // Log the mistake (only the first mistake is logged for the report)
-        if (!scoreHistory[currentIdx]) {
-            scoreHistory[currentIdx] = { word: correct, user: val || "(blank)", status: '❌' };
-        }
+        speak("Try again Scarlett!");
+        buildHistory.push({word: wordList[currentIdx].word, status: '❌', user: user});
         document.getElementById('princess-char').classList.add('shake');
-        setTimeout(() => document.getElementById('princess-char').classList.remove('shake'), 500);
-        speak(`Look for the sound ${correct[val.length] || correct[0]}`);
+        setTimeout(() => {
+            document.getElementById('princess-char').classList.remove('shake');
+            resetPart2();
+        }, 500);
     }
 }
 
-function showResults() {
-    document.getElementById('game-ui').style.display = 'none';
-    const resultPage = document.getElementById('result-page');
-    resultPage.classList.add('active');
-    
-    const list = document.getElementById('history-list');
-    list.innerHTML = '';
-    
-    scoreHistory.forEach(item => {
-        const row = document.createElement('div');
-        row.className = 'result-row';
-        
-        let displayUser = item.user;
-        // Logic to show exactly where the mistake was
-        if(item.status === '❌') {
-            let highlighted = "";
-            for(let i=0; i < item.word.length; i++) {
-                if(item.user[i] !== item.word[i]) {
-                    highlighted += `<span class="highlight">${item.user[i] || "_"}</span>`;
-                    highlighted += item.user.substring(i+1);
-                    break;
-                }
-                highlighted += item.user[i];
-            }
-            displayUser = highlighted;
-        }
-
-        row.innerHTML = `
-            <span>${item.status} <strong>${item.word}</strong></span>
-            <span>
-                ${item.status === '❌' ? `<span class="wrong-text">${displayUser}</span>` : ''}
-                <span class="correct-text">${item.word}</span>
-            </span>
-        `;
-        list.appendChild(row);
-    });
-    speak("Scarlett, you finished! Look at your royal report.");
+function checkTyping() {
+    const val = document.getElementById('typing-input').value.toLowerCase().trim();
+    const correct = wordList[currentIdx].word;
+    if (val === correct) {
+        celebrate();
+        typingHistory.push({word: correct, status: '✅'});
+        currentIdx++;
+        setTimeout(() => {
+            document.getElementById('typing-input').value = '';
+            if (currentIdx < wordList.length) loadWord();
+            else showReport(2);
+        }, 1500);
+    } else {
+        typingHistory.push({word: correct, status: '❌', user: val || "___"});
+        document.getElementById('princess-char').classList.add('shake');
+        speak("Listen for the sound " + correct[val.length]);
+        setTimeout(() => document.getElementById('princess-char').classList.remove('shake'), 500);
+    }
 }
 
-window.onload = loadWord;
+function showReport(phase) {
+    document.getElementById('play-area').style.display = 'none';
+    const resPage = document.getElementById('results-page');
+    resPage.classList.add('active');
+    const content = document.getElementById('report-content');
+    content.innerHTML = "";
+    
+    const data = (phase === 1) ? buildHistory : typingHistory;
+    document.getElementById('res-title').innerText = (phase === 1) ? "Building Phase Report" : "Final Typing Report";
+
+    data.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'result-item';
+        div.innerHTML = `<span>${item.status} ${item.word}</span> ${item.status === '❌' ? `<span class="mistake-txt">Scarlett wrote: ${item.user}</span>` : ''}`;
+        content.appendChild(div);
+    });
+
+    if (phase === 2) {
+        document.getElementById('phase-btn').innerText = "Play All Again! ✨";
+        document.getElementById('phase-btn').onclick = () => location.reload();
+    }
+}
+
+function startTypingPhase() {
+    gamePhase = 2; currentIdx = 0;
+    document.getElementById('results-page').classList.remove('active');
+    document.getElementById('play-area').style.display = 'block';
+    loadWord();
+}
+
+function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+window.onload = () => {
+    loadWord();
+    setTimeout(() => speak("Welcome Scarlett! Let's help the Queen find her clothes!"), 1000);
+};
