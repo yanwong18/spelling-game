@@ -3,96 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scarlett's Royal Phonics Quest</title>
-    
-    <!-- Speaking Library: ResponsiveVoice -->
-    <script src="https://code.responsivevoice.org/responsivevoice.js?key=8p6p8256"></script>
-    <!-- Celebration Library -->
+    <title>Scarlett's Royal Phonics</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Short+Stack&display=swap" rel="stylesheet">
-    
+    <link rel="stylesheet" href="style.css">
     <style>
         :root { --p-pink: #ff85a2; --p-purple: #9b59b6; --p-blue: #3498db; --p-green: #2ecc71; --gold: #f1c40f; --error: #e74c3c; }
-        body { font-family: 'Short Stack', cursive; background: #fff0f6; margin: 0; padding: 10px; display: flex; justify-content: center; }
+        body { font-family: 'Short Stack', cursive; background: #fff0f6; margin: 0; padding: 15px; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: #333; }
         #game-card { background: white; width: 100%; max-width: 650px; border: 10px solid var(--p-pink); border-radius: 50px; padding: 25px; box-shadow: 0 15px 0 #f8bbd0; text-align: center; }
-        
-        .main-title { font-family: 'Fredoka One', cursive; color: var(--p-pink); font-size: 35px; margin: 0; }
-        #princess-char { font-size: 80px; margin: 10px; transition: 0.3s; display: inline-block; cursor: pointer; }
-        .dance { animation: dance 0.5s infinite; }
-        @keyframes dance { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
-        .shake { animation: shake 0.2s 3; }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(10px); } 75% { transform: translateX(-10px); } }
-
-        .pic-box { font-size: 80px; background: #fff; width: 130px; height: 130px; margin: 10px auto; border-radius: 30px; display: flex; align-items: center; justify-content: center; border: 4px dashed var(--p-pink); }
-        #word-label { font-family: 'Fredoka One', cursive; font-size: 38px; color: var(--p-blue); margin: 5px 0; min-height: 45px; }
-
-        .tile-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 15px 0; min-height: 90px; }
-        .tile-wrapper { display: flex; flex-direction: column; align-items: center; }
-        .tile { background: white; border: 4px solid var(--p-blue); padding: 10px 15px; font-size: 28px; border-radius: 15px; cursor: pointer; box-shadow: 0 5px 0 var(--p-blue); }
-        .sound-dot { width: 10px; height: 10px; background: #ddd; border-radius: 50%; margin-top: 5px; }
-        .sound-dash { width: 35px; height: 7px; background: #ddd; border-radius: 10px; margin-top: 5px; }
-
-        .btn { padding: 15px 25px; font-size: 20px; border-radius: 50px; border: none; cursor: pointer; font-family: 'Fredoka One'; color: white; margin: 5px; transition: 0.2s; }
-        .btn-blend { background: var(--p-pink); box-shadow: 0 6px 0 #e65a78; }
-        .btn-listen { background: var(--p-blue); box-shadow: 0 6px 0 #2980b9; }
-        .btn-next { background: var(--p-green); box-shadow: 0 6px 0 #27ae60; }
-        .btn:active { transform: translateY(3px); }
-
-        .drop-zone { min-height: 80px; background: #fdfdfd; border-radius: 20px; margin: 15px 0; display: flex; justify-content: center; align-items: center; gap: 8px; border: 3px inset #ffe4ed; }
-        input { font-size: 28px; width: 80%; padding: 10px; border: 4px solid var(--gold); border-radius: 15px; text-align: center; outline: none; }
-        
         .section { display: none; }
-        .active { display: block; }
-        
-        .report-card { background: #fff5f8; padding: 20px; border-radius: 30px; border: 3px solid var(--gold); margin-top: 15px; text-align: left; max-height: 300px; overflow-y: auto; }
-        .result-item { display: flex; justify-content: space-between; border-bottom: 1px solid #ffdae5; padding: 10px 0; align-items: center; }
-        .mistake-txt { font-size: 14px; color: var(--error); font-weight: bold; }
+        .section.active { display: block; }
+        .main-title { font-family: 'Fredoka One', cursive; color: var(--p-pink); font-size: 35px; margin-bottom: 10px; }
+        #princess-char { font-size: 80px; margin: 10px; transition: 0.3s; display: inline-block; cursor: pointer; }
+        .dance { animation: bounce 0.5s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        .pic-box { font-size: 80px; background: #fffdf9; width: 140px; height: 140px; margin: 10px auto; border-radius: 30px; display: flex; align-items: center; justify-content: center; border: 4px dashed var(--p-pink); }
+        #word-label { font-family: 'Fredoka One', cursive; font-size: 45px; color: var(--p-blue); margin: 15px 0; height: 60px; display: block; }
+        .tile-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 20px 0; min-height: 100px; }
+        .tile-wrapper { display: flex; flex-direction: column; align-items: center; }
+        .tile { background: white; border: 4px solid var(--p-blue); padding: 12px 20px; font-size: 32px; border-radius: 18px; cursor: pointer; box-shadow: 0 5px 0 var(--p-blue); color: #333; }
+        .sound-dot { width: 12px; height: 12px; background: #ddd; border-radius: 50%; margin-top: 8px; }
+        .sound-dash { width: 45px; height: 8px; background: #ddd; border-radius: 10px; margin-top: 8px; }
+        .btn { padding: 15px 30px; font-size: 22px; border-radius: 50px; border: none; cursor: pointer; font-family: 'Fredoka One'; color: white; margin: 10px; transition: 0.2s; }
+        .btn-speak { background: var(--p-pink); box-shadow: 0 6px 0 #e65a78; }
+        .btn-next { background: var(--p-green); box-shadow: 0 6px 0 #27ae60; }
+        .btn-listen { background: var(--p-blue); box-shadow: 0 6px 0 #2980b9; }
+        .btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #666; }
+        .drop-zone { min-height: 90px; background: #fdfdfd; border-radius: 25px; margin: 20px 0; display: flex; justify-content: center; align-items: center; gap: 10px; border: 3px inset #ffe4ed; }
+        input { font-size: 35px; width: 85%; padding: 15px; border: 5px solid var(--gold); border-radius: 20px; text-align: center; outline: none; font-family: 'Fredoka One'; color: var(--p-purple); }
+        .prog-text { font-size: 18px; color: var(--p-purple); font-weight: bold; margin-bottom: 5px; }
+        .report-box { background: #fff5f8; padding: 20px; border-radius: 30px; border: 4px solid var(--gold); text-align: left; max-height: 300px; overflow-y: auto; margin-top: 20px; }
+        .report-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #ffdae5; align-items: center; }
+        .mistake-txt { color: var(--error); font-weight: bold; font-size: 14px; }
     </style>
 </head>
 <body>
+
 <div id="game-card">
-    <div id="play-area">
-        <div id="step-indicator" style="color: var(--p-purple); font-weight: bold;">Step 1: Learn</div>
-        <div class="prog">Princess Wardrobe: <span id="count-num">1</span> / 12</div>
+    <!-- START SCREEN -->
+    <div id="start-screen" class="section active">
         <h1 class="main-title">Scarlett's Game</h1>
+        <div style="font-size: 100px; margin: 20px;">👸</div>
+        <p style="font-size: 20px;">Hi Scarlett! Click the button to help the Princess!</p>
+        <button class="btn btn-next" onclick="startGame()">Start Game ✨</button>
+    </div>
+
+    <!-- PLAY AREA -->
+    <div id="play-area" class="section">
+        <div id="phase-name" style="color: var(--p-purple); font-weight: bold; font-size: 18px;">Part 1: Learn</div>
+        <div class="prog-text">Word <span id="count-num">1</span> of 12</div>
         <div id="princess-char">👸</div>
         <div class="pic-box" id="pic-display"></div>
         <div id="word-label"></div>
-        <div id="feedback-msg" style="height:20px; color:var(--error); font-weight:bold;"></div>
 
-        <!-- PART 1 -->
-        <div id="part1" class="section active">
-            <button class="btn btn-blend" onclick="blendWord()">Blend Sounds ✨</button>
+        <!-- Part 1 -->
+        <div id="step1-ui" class="section">
+            <button class="btn btn-speak" onclick="speakWord()">Speak Word 🔊</button>
             <div id="p1-tiles" class="tile-container"></div>
-            <button class="btn btn-next" onclick="goToPart2()">Build it Scarlett! ➔</button>
+            <button class="btn btn-next" onclick="toStep2()">Ready to Build! ➔</button>
         </div>
 
-        <!-- PART 2 -->
-        <div id="part2" class="section">
-            <p>Build the word with sounds:</p>
-            <div class="drop-zone" id="drop-zone"></div>
+        <!-- Part 2 -->
+        <div id="step2-ui" class="section">
+            <p>Use the sounds to build the word:</p>
+            <div id="drop-zone" class="drop-zone"></div>
             <div id="p2-bank" class="tile-container"></div>
-            <button onclick="resetPart2()" style="border:none; color:gray; cursor:pointer; background:none;">Reset ↺</button>
+            <button onclick="resetBuild()" style="background:none; border:none; color:gray; cursor:pointer;">Restart Word ↺</button>
         </div>
 
-        <!-- PART 3 -->
-        <div id="part3" class="section">
-            <button class="btn btn-listen" onclick="playWholeWord()">Listen 🔊</button>
-            <p>Type the whole word:</p>
-            <input type="text" id="typing-input" autocomplete="off">
+        <!-- Part 3 -->
+        <div id="step3-ui" class="section">
+            <button class="btn btn-listen" onclick="speakWord()">Listen Again 🔊</button>
+            <p style="font-size: 20px;">Type the word Scarlett:</p>
+            <input type="text" id="typing-box" autocomplete="off" placeholder="...">
             <br>
             <button class="btn btn-next" onclick="checkTyping()">Check Spelling ✅</button>
         </div>
     </div>
 
-    <!-- RESULTS -->
-    <div id="results-page" class="section">
+    <!-- REPORT -->
+    <div id="report-screen" class="section">
         <h1 id="res-title" style="color: var(--gold); font-family: 'Fredoka One';">Royal Report Card</h1>
-        <div id="report-content" class="report-card"></div>
+        <div id="report-list" class="report-box"></div>
         <button id="phase-btn" class="btn btn-next" onclick="startTypingPhase()">Start Typing Challenge! ➔</button>
     </div>
 </div>
+
 <script src="script.js"></script>
 </body>
 </html>
